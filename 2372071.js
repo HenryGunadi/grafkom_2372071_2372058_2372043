@@ -1,145 +1,224 @@
-export function gambar_titik(imageData, x, y, r, g, b, cnv) {
-    var index;
-    index = 4 * (Math.ceil(x) + (Math.ceil(y) * cnv.width));
-
-    imageData.data[index] = r;
-    imageData.data[index + 1] = g;    
-    imageData.data[index + 2] = b;    
-    imageData.data[index + 3] = 255;    
-}
-
-export function dda_line(imageData, x1, y1, x2, y2, r, g, b, cnv){
-    var dx = x2-x1;
-    var dy = y2-y1;
-
-    if(Math.abs(dx) > Math.abs(dy)){
-        if(x2 > x1){
-            var y = y1;
-            for(var x = x1; x < x2; x++){
-                y = y + (dy/Math.abs(dx))
-                gambar_titik(imageData, x, y, r, g, b, cnv);
-            }
-        }
-        else{
-            var y = y1;
-            for(var x = x1; x > x2; x--){
-                y = y + (dy/Math.abs(dx))
-                gambar_titik(imageData, x, y, r, g, b, cnv);
-            }
-        }
-    }
-    else{
-        if(y2 > y1){
-            var x = x1;
-            for(var y = y1; y < y2; y++){
-                x = x + (dx/Math.abs(dy))
-                gambar_titik(imageData, x, y, r, g, b, cnv);
-            }
-        }
-        else{
-            var x = x1;
-            for(var y = y1; y > y2; y--){
-                x = x + (dx/Math.abs(dy))
-                gambar_titik(imageData, x, y, r, g, b, cnv);
-            }
-        }
-    }
-}
+import * as common from "./common.js";
 
 export function square(imageData, xc, yc, length, r, g, b, cnv) {
-    const x1 = Math.floor(xc - (length / 2))
-    const x2 = Math.floor(xc + (length / 2))
-    const y1 = Math.floor(yc - (length / 2))
-    const y2 = Math.floor(yc + (length / 2))
+  const x1 = Math.floor(xc - length / 2);
+  const x2 = Math.floor(xc + length / 2);
+  const y1 = Math.floor(yc - length / 2);
+  const y2 = Math.floor(yc + length / 2);
 
-    dda_line(imageData, x1, y1, x2, y1, r, g, b, cnv)
-    dda_line(imageData, x1, y1, x1, y2, r, g, b, cnv)
-    dda_line(imageData, x1, y2, x2, y2, r, g, b, cnv)
-    dda_line(imageData, x2, y1, x2, y2, r, g, b, cnv)
+  common.dda_line(imageData, x1, y1, x2, y1, r, g, b, cnv);
+  common.dda_line(imageData, x1, y1, x1, y2, r, g, b, cnv);
+  common.dda_line(imageData, x1, y2, x2, y2, r, g, b, cnv);
+  common.dda_line(imageData, x2, y1, x2, y2, r, g, b, cnv);
 
-    FloodFillStack(imageData, cnv, xc, yc, {r: 0, g: 0, b: 0}, {r: r, g: g, b:b})
+  common.FloodFillStack(
+    imageData,
+    cnv,
+    xc,
+    yc,
+    { r: 0, g: 0, b: 0 },
+    { r: r, g: g, b: b }
+  );
 }
 
-export function FloodFillStack(imageData, cnv, x, y, toFlood, color) {
-    var index = 4 * (x + (y * cnv.width));
-    var r1 = imageData.data[index];
-    var g1 = imageData.data[index + 1];
-    var b1 = imageData.data[index + 2];
+export function lingkaran(
+  imageData,
+  xc,
+  yc,
+  radius,
+  r,
+  g,
+  b,
+  cnv,
+  net = false
+) {
+  for (var theta = 0; theta < Math.PI * 2; theta += 0.005) {
+    var x = xc + radius * Math.cos(theta);
+    var y = yc + radius * Math.sin(theta);
+    common.gambar_titik(imageData, x, y, r, g, b, cnv);
+  }
+  if (net === false) {
+    common.FloodFillStack(
+      imageData,
+      cnv,
+      xc,
+      yc,
+      { r: 0, g: 0, b: 0 },
+      { r: r, g: g, b: b }
+    );
+  }
+}
 
-    var tumpukan = [];
-    tumpukan.push({ x: x, y: y });
+export function generateFishAndTrash(
+  imageData,
+  cnv,
+  nFish,
+  nTrash,
+  fishColor,
+  trashColor
+) {
+  const trashes = [];
+  const fishes = [];
 
-    while (tumpukan.length > 0) {
-        var titikS = tumpukan.pop();
-        var indexS = 4 * (titikS.x + (titikS.y * cnv.width));
-        var r1 = imageData.data[indexS];
-        var g1 = imageData.data[indexS + 1];
-        var b1 = imageData.data[indexS + 2];
+  for (var i = 0; i < nFish; i++) {
+    const x = Math.floor(Math.random() * cnv.width);
+    const y = Math.floor(Math.random() * cnv.height);
+    const randomSize = 5 + Math.floor(Math.random() * 6);
+    const randomSpeed = 5 + Math.floor(Math.random() * 11); // pixel
+    const randomDirection = Math.floor(Math.random() * 2) === 1 ? 1 : -1;
 
-        if ((toFlood.r == r1) && (toFlood.g == g1) && (toFlood.b) == b1) {
-            imageData.data[indexS] = color.r;
-            imageData.data[indexS + 1] = color.g;
-            imageData.data[indexS + 2] = color.b;
-            imageData.data[indexS + 3] = 255;
+    const fish = {
+      x: x,
+      y: y,
+      size: randomSize,
+      speed: randomSpeed,
+      xDirection: randomDirection,
+      yDirection: randomDirection,
+      r: fishColor.r,
+      g: fishColor.g,
+      b: fishColor.b,
+    };
 
-            tumpukan.push({ x: titikS.x + 1, y: titikS.y });
-            tumpukan.push({ x: titikS.x - 1, y: titikS.y });
-            tumpukan.push({ x: titikS.x, y: titikS.y + 1 });
-            tumpukan.push({ x: titikS.x, y: titikS.y - 1 });
+    lingkaran(
+      imageData,
+      x,
+      y,
+      randomSize,
+      fishColor.r,
+      fishColor.g,
+      fishColor.b,
+      cnv
+    );
+
+    fishes.push(fish);
+  }
+
+  for (var i = 0; i < nTrash; i++) {
+    const x = Math.floor(Math.random() * cnv.width);
+    const y = Math.floor(Math.random() * cnv.height);
+    const randomSize = 20 + Math.floor(Math.random() * 6);
+    const randomSpeed = 5 + Math.floor(Math.random() * 6); // pixel
+    const randomDirection = Math.floor(Math.random() * 2) === 1 ? 1 : -1;
+
+    const trash = {
+      x: x,
+      y: y,
+      size: randomSize,
+      speed: randomSpeed,
+      xDirection: randomDirection,
+      yDirection: randomDirection,
+      r: trashColor.r,
+      g: trashColor.g,
+      b: trashColor.b,
+    };
+
+    square(
+      imageData,
+      x,
+      y,
+      randomSize,
+      trashColor.r,
+      trashColor.g,
+      trashColor.b,
+      cnv
+    );
+
+    trashes.push(trash);
+  }
+
+  return { trashes, fishes };
+}
+
+export function animate(trashes, fishes, cnv, imageData, ctx) {
+  var timer = 0;
+
+  function draw() {
+    timer += 1;
+
+    if (timer > 1) {
+      ctx.clearRect(0, 0, cnv.width, cnv.height);
+      imageData = ctx.getImageData(0, 0, cnv.width, cnv.height);
+
+      // transformasi
+      // animate fishes
+      fishes.forEach((fish) => {
+        // change direction
+        if (fish.x >= cnv.width || fish.x <= 0) {
+          fish.xDirection *= -1;
         }
-    }
-}
 
-export function lingkaran(imageData, xc, yc, radius, r, g, b, cnv, net = false) {
-    for (var theta = 0; theta < Math.PI * 2; theta += 0.005) {
-        var x = xc + (radius * Math.cos(theta));
-        var y = yc + (radius * Math.sin(theta));
-        gambar_titik(imageData, x, y, r, g, b, cnv);
-
-    }
-    if (net === false) {
-        FloodFillStack(imageData, cnv, xc, yc, {r: 0, g: 0, b: 0}, {r: r, g: g, b: b})
-    }
-}
-
-export function generateFishAndTrash(imageData, cnv, nFish, nTrash, fishColor, trashColor) {
-    const trashes = []
-    const fishes = []
-
-    for (var i = 0; i < nFish; i ++) {
-        const x = Math.floor(Math.random() * cnv.width)
-        const y = Math.floor(Math.random() * cnv.height)
-
-        const fish = {
-            x: x,
-            y: y,
-            r: fishColor.r,
-            g: fishColor.g,
-            b: fishColor.b
+        if (fish.y >= cnv.height || fish.y <= 0) {
+          fish.yDirection *= -1;
         }
-        
-        lingkaran(imageData, x, y, 10, fishColor.r, fishColor.g, fishColor.b, cnv)
-        
-        fishes.push(fish)
-    }
-    
-    for (var i = 0; i < nTrash; i ++) {
-        const x = Math.floor(Math.random() * cnv.width)
-        const y = Math.floor(Math.random() * cnv.height)
-        
-        const trash = {
-            x: x,
-            y: y,
-            r: trashColor.r,
-            g: trashColor.g,
-            b: trashColor.b
+
+        // translasi
+        const m = common.createTranslation(
+          fish.speed * fish.xDirection,
+          fish.speed * fish.yDirection
+        );
+
+        const [transformedFish] = common.transform_array(
+          [{ x: fish.x, y: fish.y }],
+          m
+        );
+
+        fish.x = transformedFish.x;
+        fish.y = transformedFish.y;
+
+        lingkaran(
+          imageData,
+          fish.x,
+          fish.y,
+          fish.size,
+          fish.r,
+          fish.g,
+          fish.b,
+          cnv
+        );
+      });
+
+      // animate trashes
+      trashes.forEach((trash) => {
+        // change direction
+        if (trash.x >= cnv.width || trash.x <= 0) {
+          trash.xDirection *= -1;
         }
-        
-        square(imageData, x, y, 20, trashColor.r, trashColor.g, trashColor.b, cnv)
-        
-        trashes.push(trash)
+
+        if (trash.y >= cnv.height || trash.y <= 0) {
+          trash.yDirection *= -1;
+        }
+
+        // translasi
+        const m = common.createTranslation(
+          trash.speed * trash.xDirection,
+          trash.speed * trash.yDirection
+        );
+
+        const [transformedTrash] = common.transform_array(
+          [{ x: trash.x, y: trash.y }],
+          m
+        );
+
+        trash.x = transformedTrash.x;
+        trash.y = transformedTrash.y;
+
+        square(
+          imageData,
+          trash.x,
+          trash.y,
+          trash.size,
+          trash.r,
+          trash.g,
+          trash.b,
+          cnv
+        );
+      });
+
+      ctx.putImageData(imageData, 0, 0);
+      timer = 0;
     }
+    requestAnimationFrame(draw);
+  }
 
-    return {trashes, fishes} 
+  draw();
 }
-
