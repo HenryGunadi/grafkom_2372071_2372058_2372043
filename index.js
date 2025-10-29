@@ -1,9 +1,11 @@
 import * as henryFunctions from "./2372071.js";
+import * as maherFunctions from "./2372058.js"; 
 
 var cnv = document.querySelector("#myCanvas");
 var ctx;
 ctx = cnv.getContext("2d");
-var imageData = ctx.getImageData(10, 0, cnv.width, cnv.height);
+var imageData = ctx.getImageData(0, 0, cnv.width, cnv.height);
+let activeJaringAnimations = [];  
 
 function main() {
   // Kode Main
@@ -22,7 +24,12 @@ function main() {
     fishAndTrashes.fishes,
     cnv,
     imageData,
-    ctx
+    ctx, 
+    activeJaringAnimations
+  );
+
+  maherFunctions.jaring(
+    cnv, activeJaringAnimations
   );
 }
 

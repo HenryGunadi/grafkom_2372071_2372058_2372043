@@ -129,7 +129,7 @@ export function generateFishAndTrash(
   return { trashes, fishes };
 }
 
-export function animate(trashes, fishes, cnv, imageData, ctx) {
+export function animate(trashes, fishes, cnv, imageData, ctx, activeJaringAnimations) {
   var timer = 0;
 
   function draw() {
@@ -138,11 +138,7 @@ export function animate(trashes, fishes, cnv, imageData, ctx) {
     if (timer > 1) {
       ctx.clearRect(0, 0, cnv.width, cnv.height);
       imageData = ctx.getImageData(0, 0, cnv.width, cnv.height);
-
-      // transformasi
-      // animate fishes
       fishes.forEach((fish) => {
-        // change direction
         if (fish.x >= cnv.width || fish.x <= 0) {
           fish.xDirection *= -1;
         }
@@ -151,7 +147,6 @@ export function animate(trashes, fishes, cnv, imageData, ctx) {
           fish.yDirection *= -1;
         }
 
-        // translasi
         const m = common.createTranslation(
           fish.speed * fish.xDirection,
           fish.speed * fish.yDirection
@@ -177,9 +172,7 @@ export function animate(trashes, fishes, cnv, imageData, ctx) {
         );
       });
 
-      // animate trashes
       trashes.forEach((trash) => {
-        // change direction
         if (trash.x >= cnv.width || trash.x <= 0) {
           trash.xDirection *= -1;
         }
@@ -188,7 +181,6 @@ export function animate(trashes, fishes, cnv, imageData, ctx) {
           trash.yDirection *= -1;
         }
 
-        // translasi
         const m = common.createTranslation(
           trash.speed * trash.xDirection,
           trash.speed * trash.yDirection
@@ -214,9 +206,25 @@ export function animate(trashes, fishes, cnv, imageData, ctx) {
         );
       });
 
+      activeJaringAnimations.forEach((net) => {
+        if (!net.done) {
+          common.lingkaran_polar(imageData, net.x, net.y, net.r, 0, 255, 0, cnv);
+          net.r += net.speed;
+
+          if (net.r >= net.maxR) {
+            net.done = true;
+            net.timer = 30; 
+          }
+        } else {
+          common.lingkaran_polar(imageData, net.x, net.y, net.maxR, 255, 0, 0, cnv);
+          net.timer -= 1;
+        }
+      });
+
       ctx.putImageData(imageData, 0, 0);
       timer = 0;
     }
+
     requestAnimationFrame(draw);
   }
 

@@ -114,3 +114,26 @@ export function applyTransformations(transformations, point_arrays) {
     return original;
   });
 }
+
+export function translasi(titik_lama, jarak){
+  var x_baru = titik_lama.x + jarak.x; 
+  var y_baru = titik_lama.y + jarak.y; 
+
+  return{x:x_baru, y:y_baru};
+}
+
+export function lingkaran_polar(imageData, xc, yc, radius, r, g, b, cnv){
+  for(var theta = 0; theta < Math.PI*2; theta += 0.001){
+    var x = xc + radius * Math.cos(theta); 
+    var y = yc + radius * Math.sin(theta);
+    if (x >= 0) {
+      if (x < cnv.width) {
+        if (y >= 0) {
+          if (y < cnv.height) {
+            gambar_titik(imageData, x, y, r, g, b, cnv);
+          }
+        }
+      }
+    }
+  }
+}
