@@ -3,32 +3,350 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Grafkom</title>
+    <title>Fishing Game - Grafkom</title>
     <style>
-      body {
+      * {
         margin: 0;
-        height: 100vh;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
         display: flex;
         justify-content: center;
         align-items: center;
+        padding: 20px;
       }
 
-      canvas {
-        border: 1px solid black;
+      .game-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        max-width: 1200px;
+        width: 100%;
+      }
+
+      .game-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .game-title {
+        color: #2c3e50;
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .game-subtitle {
+        color: #7f8c8d;
+        font-size: 1.2rem;
+        font-weight: 300;
       }
 
       .draw-container {
         display: flex;
-        flex-direction: row;
+        gap: 30px;
+        align-items: flex-start;
+      }
+
+      .canvas-wrapper {
+        position: relative;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 3px solid #34495e;
+      }
+
+      canvas {
+        display: block;
+        background: linear-gradient(160deg, #87ceeb, #1e90ff);
+      }
+
+      .controls-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-width: 250px;
+      }
+
+      .control-group {
+        background: rgba(52, 73, 94, 0.1);
+        padding: 20px;
+        border-radius: 15px;
+        border: 2px solid rgba(52, 73, 94, 0.2);
+      }
+
+      .control-group h3 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .control-group h3::before {
+        content: "🎮";
+        font-size: 1.2rem;
+      }
+
+      .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .game-button {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+        border: none;
+        padding: 15px 20px;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .game-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        background: linear-gradient(45deg, #2980b9, #3498db);
+      }
+
+      .game-button:active {
+        transform: translateY(0);
+      }
+
+      .game-button.secondary {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+      }
+
+      .game-button.secondary:hover {
+        background: linear-gradient(45deg, #c0392b, #e74c3c);
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+      }
+
+      .game-button.success {
+        background: linear-gradient(45deg, #27ae60, #229954);
+        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+      }
+
+      .game-button.success:hover {
+        background: linear-gradient(45deg, #229954, #27ae60);
+        box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+      }
+
+      .stats-panel {
+        background: rgba(52, 73, 94, 0.1);
+        padding: 20px;
+        border-radius: 15px;
+        border: 2px solid rgba(52, 73, 94, 0.2);
+      }
+
+      .stats-panel h3 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .stats-panel h3::before {
+        content: "📊";
+        font-size: 1.2rem;
+      }
+
+      .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(52, 73, 94, 0.1);
+      }
+
+      .stat-item:last-child {
+        border-bottom: none;
+      }
+
+      .stat-label {
+        color: #7f8c8d;
+        font-weight: 500;
+      }
+
+      .stat-value {
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 1.2rem;
+      }
+
+      .instructions {
+        background: rgba(241, 196, 15, 0.1);
+        padding: 20px;
+        border-radius: 15px;
+        border: 2px solid rgba(241, 196, 15, 0.3);
+        margin-top: 20px;
+      }
+
+      .instructions h3 {
+        color: #f39c12;
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .instructions h3::before {
+        content: "💡";
+        font-size: 1.2rem;
+      }
+
+      .instructions ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .instructions li {
+        padding: 8px 0;
+        color: #7f8c8d;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .instructions li::before {
+        content: "🎯";
+        font-size: 0.9rem;
+      }
+
+      .power-up-indicators {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+      }
+
+      .power-up-indicator {
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: white;
+      }
+
+      .power-up-indicator.speed {
+        background: linear-gradient(45deg, #e67e22, #d35400);
+      }
+
+      .power-up-indicator.double {
+        background: linear-gradient(45deg, #9b59b6, #8e44ad);
+      }
+
+      .power-up-indicator.wider {
+        background: linear-gradient(45deg, #1abc9c, #16a085);
+      }
+
+      @media (max-width: 768px) {
+        .draw-container {
+          flex-direction: column;
+        }
+
+        .controls-panel {
+          min-width: 100%;
+        }
+
+        .game-title {
+          font-size: 2rem;
+        }
       }
     </style>
   </head>
   <body>
-    <div class="draw-container">
-      <canvas id="myCanvas" width="800" height="800"></canvas>
-      <div id="jaring-naik"></div>
-      <div id="reset"></div>
+    <div class="game-container">
+      <div class="game-header">
+        <h1 class="game-title">Fishing Adventure</h1>
+        <p class="game-subtitle">
+          Catch fish, avoid trash, and collect power-ups!
+        </p>
+      </div>
+
+      <div class="draw-container">
+        <div class="canvas-wrapper">
+          <canvas id="myCanvas" width="800" height="600"></canvas>
+        </div>
+
+        <div class="controls-panel">
+          <div class="control-group">
+            <h3>Game Controls</h3>
+            <div class="button-group">
+              <button id="button-umpan" class="game-button success">
+                🎣 Throw Bait
+              </button>
+              <button id="jaring-naik" class="game-button">🔄 Pull Net</button>
+              <button id="pauseButton" class="game-button secondary">
+                ⏸️ Pause
+              </button>
+              <button id="restartButton" class="game-button">🔄 Restart</button>
+            </div>
+          </div>
+
+          <div class="stats-panel">
+            <h3>Game Stats</h3>
+            <div class="stat-item">
+              <span class="stat-label">Score:</span>
+              <span id="scoreValue" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Time:</span>
+              <span id="timeValue" class="stat-value">60s</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Fish Caught:</span>
+              <span id="fishValue" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Active Bait:</span>
+              <span id="baitValue" class="stat-value">0</span>
+            </div>
+          </div>
+
+          <div class="instructions">
+            <h3>How to Play</h3>
+            <ul>
+              <li>Click on canvas to throw fishing net</li>
+              <li>Use bait to attract fish to specific areas</li>
+              <li>Catch blue fish for +10 points</li>
+              <li>Avoid red trash (-5 points)</li>
+              <li>Collect power-ups for special abilities</li>
+              <li>Pull net early to secure your catch</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
+
     <script type="module" src="index.js"></script>
   </body>
 </html>

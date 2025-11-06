@@ -11,6 +11,7 @@ let activeJaringAnimations = [];
 let powerUps = []; // daftar power-up aktif di kanvas
 let powerUpSpawnerRunning = false;
 const controls = { paused: false, _snapshot: null };
+let umpans = [];
 
 // Memunculkan power-up secara acak setiap 5–15 detik
 function startPowerUpSpawner() {
@@ -51,69 +52,87 @@ function startPowerUpSpawner() {
   spawnOne();
 }
 
+function setupEventListeners() {
+  // Setup bait button
+  const baitBtn = document.getElementById("button-umpan");
+  if (baitBtn) {
+    baitBtn.addEventListener("click", function (ev) {
+      maherFunctions.umpan(cnv, umpans);
+    });
+  }
+
+  // Setup pull net button
+  const pullNetBtn = document.getElementById("jaring-naik");
+  if (pullNetBtn) {
+    pullNetBtn.addEventListener("click", function (ev) {
+      nazwaFunctions.jaringNaik(activeJaringAnimations);
+    });
+  }
+
+  // Setup pause button
+  const pauseBtn = document.getElementById("pauseButton");
+  if (pauseBtn) {
+    pauseBtn.addEventListener("click", function () {
+      // ubah status pause
+      controls.paused = !controls.paused;
+      pauseBtn.textContent = controls.paused ? "▶️ Continue" : "⏸️ Pause";
+      pauseBtn.className = controls.paused
+        ? "game-button success"
+        : "game-button secondary";
+
+      // hentikan/jalankan timer permainan juga
+      rafaelFunctions.setPaused(controls.paused);
+
+      // saat pause, ambil snapshot layar untuk menampilkan overlay
+      if (controls.paused) {
+        try {
+          controls._snapshot = ctx.getImageData(0, 0, cnv.width, cnv.height);
+        } catch (e) {
+          // getImageData bisa gagal jika canvas ter-"taint"; abaikan jika gagal
+          controls._snapshot = null;
+        }
+      } else {
+        controls._snapshot = null;
+      }
+    });
+  }
+
+  // Setup restart button
+  const restartBtn = document.getElementById("restartButton");
+  if (restartBtn) {
+    restartBtn.addEventListener("click", function () {
+      // hanya bisa restart jika permainan sudah selesai
+      if (rafaelFunctions.isGameRunning()) return;
+      restartGame();
+    });
+  }
+
+  // Setup canvas click for fishing net
+  maherFunctions.jaring(cnv, activeJaringAnimations);
+}
+
 function main() {
   // Memulai UI dan timer permainan
   rafaelFunctions.startGame();
 
-  // Tambahkan tombol untuk menarik jaring
-  const retractButton = document.getElementById("jaring-naik");
-  retractButton.innerHTML = '<button style="padding: 10px; margin: 10px;">Tarik Jaring</button>';
-  retractButton.firstChild.addEventListener("click", () => {
-    nazwaFunctions.jaringNaik(activeJaringAnimations);
-  });
+  // Setup semua event listeners
+  setupEventListeners();
 
-  // Tambahkan tombol restart
-  const resetContainer = document.getElementById("reset");
-  resetContainer.innerHTML = '<button id="restartButton" style="padding: 10px; margin: 10px;">Mulai Ulang</button>';
-  const restartBtn = document.getElementById("restartButton");
-  restartBtn.addEventListener("click", () => {
-    // hanya bisa restart jika permainan sudah selesai
-    if (rafaelFunctions.isGameRunning()) return;
-    restartGame();
-  });
+  // Inisialisasi ikan dan sampah - CLEAR FIRST then get imageData
+  ctx.clearRect(0, 0, cnv.width, cnv.height); // Clear to transparent/white
+  imageData = ctx.getImageData(0, 0, cnv.width, cnv.height); // Get the cleared imageData
 
-  // Tambahkan tombol pause/resume
-  const pauseBtn = document.createElement('button');
-  pauseBtn.id = 'pauseButton';
-  pauseBtn.style.padding = '10px';
-  pauseBtn.style.margin = '10px';
-  pauseBtn.textContent = 'Pause';
-  resetContainer.appendChild(pauseBtn);
-  pauseBtn.addEventListener('click', () => {
-    // ubah status pause
-    controls.paused = !controls.paused;
-    pauseBtn.textContent = controls.paused ? 'Lanjutkan' : 'Pause';
-    // hentikan/jalankan timer permainan juga
-    rafaelFunctions.setPaused(controls.paused);
-    // saat pause, ambil snapshot layar untuk menampilkan overlay
-    if (controls.paused) {
-      try {
-        controls._snapshot = ctx.getImageData(0, 0, cnv.width, cnv.height);
-      } catch (e) {
-        // getImageData bisa gagal jika canvas ter-“taint”; abaikan jika gagal
-        controls._snapshot = null;
-      }
-    } else {
-      controls._snapshot = null;
-    }
-  });
-
-  // Inisialisasi ikan dan sampah
-  imageData = ctx.getImageData(0, 0, cnv.width, cnv.height);
   const fishAndTrashes = henryFunctions.generateFishAndTrash(
     imageData,
     cnv,
     20, // jumlah ikan
     10, // jumlah sampah
     { r: 0, g: 0, b: 255 }, // warna ikan
-    { r: 255, g: 0, b: 0 }  // warna sampah
+    { r: 255, g: 0, b: 0 } // warna sampah
   );
 
   // Tampilkan hasil awal ke layar
   ctx.putImageData(imageData, 0, 0);
-
-  // Aktifkan klik untuk melempar jaring
-  maherFunctions.jaring(cnv, activeJaringAnimations);
 
   // Mulai memunculkan power-up
   startPowerUpSpawner();
@@ -127,25 +146,32 @@ function main() {
     ctx,
     activeJaringAnimations,
     powerUps,
-    controls
+    controls,
+    umpans
   );
+
+  // Start updating game stats
+  setInterval(updateGameStats, 1000);
 }
 
 function restartGame() {
   // Bersihkan daftar animasi dan power-up aktif
   activeJaringAnimations.length = 0;
   powerUps.length = 0;
+  umpans.length = 0;
 
-  // Bersihkan canvas
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, cnv.width, cnv.height);
+  // Bersihkan canvas - clear first, then get fresh imageData
+  ctx.clearRect(0, 0, cnv.width, cnv.height);
   imageData = ctx.getImageData(0, 0, cnv.width, cnv.height);
 
   // Reset UI dan timer
-  // pastikan mode pause dimatikan dan timer berjalan lagi
   controls.paused = false;
-  const pb = document.getElementById('pauseButton');
-  if (pb) pb.textContent = 'Pause';
+  const pauseBtn = document.getElementById("pauseButton");
+  if (pauseBtn) {
+    pauseBtn.textContent = "⏸️ Pause";
+    pauseBtn.className = "game-button secondary";
+  }
+
   rafaelFunctions.startGame();
   rafaelFunctions.setPaused(false);
 
@@ -169,21 +195,35 @@ function restartGame() {
     ctx,
     activeJaringAnimations,
     powerUps,
-    controls
+    controls,
+    umpans
   );
 }
 
-// Tunggu sampai halaman selesai dimuat, lalu atur ukuran canvas dan mulai game
+function updateGameStats() {
+  const scoreElement = document.getElementById("scoreValue");
+  const timeElement = document.getElementById("timeValue");
+  const fishElement = document.getElementById("fishValue");
+  const baitElement = document.getElementById("baitValue");
+
+  if (scoreElement) scoreElement.textContent = rafaelFunctions.getScore() || 0;
+  if (timeElement)
+    timeElement.textContent = `${rafaelFunctions.getTimeRemaining() || 60}s`;
+  if (fishElement)
+    fishElement.textContent = rafaelFunctions.getFishCaught() || 0;
+  if (baitElement) baitElement.textContent = umpans.length;
+}
+
+// Tunggu sampai halaman selesai dimuat, lalu atur ukuran canvas dan mulai
 window.addEventListener("load", () => {
   // atur ukuran canvas jika belum ditentukan di HTML
   if (!cnv.width) cnv.width = 800;
   if (!cnv.height) cnv.height = 600;
 
-  // bersihkan layar
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, cnv.width, cnv.height);
+  // bersihkan layar dengan clearRect (transparent/white)
+  ctx.clearRect(0, 0, cnv.width, cnv.height);
 
-  // inisialisasi imageData
+  // inisialisasi imageData dari canvas yang sudah dibersihkan
   imageData = ctx.getImageData(0, 0, cnv.width, cnv.height);
 
   // jalankan permainan

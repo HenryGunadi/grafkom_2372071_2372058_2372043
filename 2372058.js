@@ -1,4 +1,4 @@
-import * as common from "./common.js"
+import * as common from "./common.js";
 
 export function gambar_titik(imageData, x, y, r, g, b, cnv) {
   x = Math.round(x);
@@ -19,7 +19,7 @@ export function gambar_titik(imageData, x, y, r, g, b, cnv) {
   var index;
   index = 4 * (x + y * cnv.width);
   imageData.data[index] = r; // red
-  imageData.data[index + 1] = g; // green 
+  imageData.data[index + 1] = g; // green
   imageData.data[index + 2] = b; // blue
   imageData.data[index + 3] = 255; // alfa
 }
@@ -27,12 +27,43 @@ export function gambar_titik(imageData, x, y, r, g, b, cnv) {
 export function jaring(cnv, activeJaringAnimations) {
   cnv.addEventListener("click", function (ev) {
     if (activeJaringAnimations.length > 0) {
-      return
+      return;
     }
     const rect = cnv.getBoundingClientRect();
     const x = ev.clientX - rect.left;
     const y = ev.clientY - rect.top;
 
-    activeJaringAnimations.push({ x, y, r: 10, maxR: 150, speed: 1, done: false });
+    activeJaringAnimations.push({
+      x,
+      y,
+      r: 10,
+      maxR: 150,
+      speed: 1,
+      done: false,
+    });
+  });
+}
+
+export function umpan(cnv, umpans) {
+  const buttonUmpan = document.querySelector("#button-umpan");
+  buttonUmpan.addEventListener("click", function (ev) {
+    umpans.length = 0;
+    const baseX = Math.random() * cnv.width * 0.8 + 50;
+    const baseY = Math.random() * cnv.height * 0.8 + 50;
+
+    for (var i = 0; i < 7; i++) {
+      const setX =
+        Math.cos((i * Math.PI) / 3) * 25 + (Math.random() - 0.5) * 10;
+      const setY =
+        Math.sin((i * Math.PI) / 3) * 25 + (Math.random() - 0.5) * 10;
+      umpans.push({
+        x: baseX + setX,
+        y: baseY + setY,
+        r: 10, // Increased size for better visibility
+      });
+    }
+    console.log(
+      `Umpan ditebar di (${Math.round(baseX)}, ${Math.round(baseY)})`
+    );
   });
 }
