@@ -16,10 +16,19 @@
         canvas {
             border: 1px solid black;
         }
+
+        .draw-container{
+            display: flex;
+            flex-direction: row;
+        }
     </style>
 </head>
 <body>
-    <canvas id="myCanvas" width="800" height="800"></canvas>
+    <div class="draw-container">
+        <canvas id="myCanvas" width="800" height="800"></canvas>
+        <div id="jaring-naik"></div>
+        <div id="reset"></div>
+    </div>
     <script type="module" src="index.js"></script>
 </body>
 </html>

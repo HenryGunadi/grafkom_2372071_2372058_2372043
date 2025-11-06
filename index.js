@@ -1,5 +1,6 @@
 import * as henryFunctions from "./2372071.js";
 import * as maherFunctions from "./2372058.js"; 
+// import * as nazwaFunctions from "./2372046.js";
 
 var cnv = document.querySelector("#myCanvas");
 var ctx;
@@ -32,5 +33,9 @@ function main() {
     cnv, activeJaringAnimations
   );
 }
+
+// nazwaFunctions.jaringNaik(
+//   imageData, cnv, activeJaringAnimations
+// );
 
 main();
