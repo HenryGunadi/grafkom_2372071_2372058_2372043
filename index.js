@@ -6,7 +6,8 @@ var cnv = document.querySelector("#myCanvas");
 var ctx;
 ctx = cnv.getContext("2d");
 var imageData = ctx.getImageData(0, 0, cnv.width, cnv.height);
-let activeJaringAnimations = [];  
+let animasiJaring = [];  
+let umpans = [];
 
 function main() {
   // Kode Main
@@ -26,16 +27,16 @@ function main() {
     cnv,
     imageData,
     ctx, 
-    activeJaringAnimations
+    animasiJaring, 
+    umpans
   );
 
-  maherFunctions.jaring(
-    cnv, activeJaringAnimations
-  );
+  maherFunctions.jaring(cnv, animasiJaring);
+  maherFunctions.umpan(cnv, umpans);
 }
 
 // nazwaFunctions.jaringNaik(
-//   imageData, cnv, activeJaringAnimations
+//   imageData, cnv, animasiJaring
 // );
 
 main();

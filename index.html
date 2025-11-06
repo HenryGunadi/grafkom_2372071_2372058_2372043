@@ -9,8 +9,26 @@
             margin: 0;
             height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center; 
             align-items: center;    
+        }
+
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #456fcf;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
         }
 
         canvas {
@@ -24,10 +42,13 @@
     </style>
 </head>
 <body>
+    <canvas id="myCanvas" width="800" height="800"></canvas>
     <div class="draw-container">
-        <canvas id="myCanvas" width="800" height="800"></canvas>
-        <div id="jaring-naik"></div>
-        <div id="reset"></div>
+        <div class="button-container">
+            <button id="button-umpan">Umpan</button>
+            <div id="jaring-naik"></div>
+            <div id="reset"></div>
+        </div>
     </div>
     <script type="module" src="index.js"></script>
 </body>

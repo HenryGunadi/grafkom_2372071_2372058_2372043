@@ -32,20 +32,20 @@ export function lingkaran(
   cnv,
   net = false
 ) {
-  for (var theta = 0; theta < Math.PI * 2; theta += 0.005) {
-    var x = xc + radius * Math.cos(theta);
-    var y = yc + radius * Math.sin(theta);
-    common.gambar_titik(imageData, x, y, r, g, b, cnv);
-  }
-  if (net === false) {
-    common.FloodFillStack(
-      imageData,
-      cnv,
-      xc,
-      yc,
-      { r: 0, g: 0, b: 0 },
-      { r: r, g: g, b: b }
-    );
+  if (net === true) {
+    for (let theta = 0; theta < Math.PI * 2; theta += 0.005) {
+      const x = xc + radius * Math.cos(theta);
+      const y = yc + radius * Math.sin(theta);
+      common.gambar_titik(imageData, x, y, r, g, b, cnv);
+    }
+  } else {
+    for (let rad = 0; rad <= radius; rad += 1) {
+      for (let theta = 0; theta < Math.PI * 2; theta += 0.05) {
+        const x = xc + rad * Math.cos(theta);
+        const y = yc + rad * Math.sin(theta);
+        common.gambar_titik(imageData, x, y, r, g, b, cnv);
+      }
+    }
   }
 }
 
@@ -64,7 +64,7 @@ export function generateFishAndTrash(
     const x = Math.floor(Math.random() * cnv.width);
     const y = Math.floor(Math.random() * cnv.height);
     const randomSize = 5 + Math.floor(Math.random() * 6);
-    const randomSpeed = 5 + Math.floor(Math.random() * 11); // pixel
+    const randomSpeed = 1 + Math.floor(Math.random() * 2); // pixel
     const randomDirection = Math.floor(Math.random() * 2) === 1 ? 1 : -1;
 
     const fish = {
@@ -97,7 +97,7 @@ export function generateFishAndTrash(
     const x = Math.floor(Math.random() * cnv.width);
     const y = Math.floor(Math.random() * cnv.height);
     const randomSize = 20 + Math.floor(Math.random() * 6);
-    const randomSpeed = 5 + Math.floor(Math.random() * 6); // pixel
+    const randomSpeed = 1 + Math.floor(Math.random() * 2); // pixel
     const randomDirection = Math.floor(Math.random() * 2) === 1 ? 1 : -1;
 
     const trash = {
@@ -129,7 +129,7 @@ export function generateFishAndTrash(
   return { trashes, fishes };
 }
 
-export function animate(trashes, fishes, cnv, imageData, ctx, activeJaringAnimations) {
+export function animate(trashes, fishes, cnv, imageData, ctx, animasiJaring, umpans) {
   var timer = 0;
 
   function draw() {
@@ -147,18 +147,36 @@ export function animate(trashes, fishes, cnv, imageData, ctx, activeJaringAnimat
           fish.yDirection *= -1;
         }
 
-        const m = common.createTranslation(
-          fish.speed * fish.xDirection,
-          fish.speed * fish.yDirection
-        );
+          if (umpans.length > 0) {
+            let umpanTerdekat = umpans[0];
+            let jarakTerdekat = Math.sqrt((fish.x - umpanTerdekat.x) ** 2 + (fish.y - umpanTerdekat.y) ** 2);
 
-        const [transformedFish] = common.transform_array(
-          [{ x: fish.x, y: fish.y }],
-          m
-        );
+            for (const umpan of umpans) {
+              const jarak = Math.sqrt((fish.x - umpan.x) ** 2 + (fish.y - umpan.y) ** 2);
+              if (jarak < jarakTerdekat) {
+                jarakTerdekat = jarak;
+                umpanTerdekat = umpan;
+              }
+            }
+            const dx = umpanTerdekat.x - fish.x;
+            const dy = umpanTerdekat.y - fish.y;
+            const total = Math.sqrt(dx * dx + dy * dy);
 
-        fish.x = transformedFish.x;
-        fish.y = transformedFish.y;
+            if (jarakTerdekat < fish.size + 5) {
+              const index = umpans.indexOf(umpanTerdekat);
+              if (index !== -1){
+                umpans.splice(index, 1);
+              }
+            } else if (total > 0) {
+              fish.x += (dx / total) * Math.floor(fish.speed/1);
+              fish.y += (dy / total) * Math.floor(fish.speed/1);
+            }
+          } else {
+            const m = common.createTranslation(fish.speed * fish.xDirection, fish.speed * fish.yDirection);
+            const [transformedFish] = common.transform_array([{ x: fish.x, y: fish.y }], m);
+            fish.x = transformedFish.x;
+            fish.y = transformedFish.y;
+          }
 
         lingkaran(
           imageData,
@@ -170,6 +188,10 @@ export function animate(trashes, fishes, cnv, imageData, ctx, activeJaringAnimat
           fish.b,
           cnv
         );
+      });
+
+      umpans.forEach((u) => {
+        lingkaran(imageData, u.x, u.y, u.r, 0, 0, 0, cnv, true);
       });
 
       trashes.forEach((trash) => {
@@ -206,7 +228,7 @@ export function animate(trashes, fishes, cnv, imageData, ctx, activeJaringAnimat
         );
       });
 
-      activeJaringAnimations.forEach((net) => {
+      animasiJaring.forEach((net) => {
         if (!net.done) {
           common.lingkaran_polar(imageData, net.x, net.y, net.r, 0, 255, 0, cnv);
           net.r += net.speed;
