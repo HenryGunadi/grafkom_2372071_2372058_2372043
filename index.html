@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grafkom</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      canvas {
+        border: 1px solid black;
+      }
+
+      .draw-container {
+        display: flex;
+        flex-direction: row;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="draw-container">
+      <canvas id="myCanvas" width="800" height="800"></canvas>
+      <div id="jaring-naik"></div>
+      <div id="reset"></div>
+    </div>
+    <script type="module" src="index.js"></script>
+  </body>
+</html>
