@@ -8,7 +8,7 @@ const ctx = cnv.getContext("2d");
 let imageData = ctx.getImageData(0, 0, cnv.width, cnv.height);
 
 let activeJaringAnimations = [];
-let powerUps = []; 
+let powerUps = [];
 let powerUpSpawnerRunning = false;
 const controls = { paused: false, _snapshot: null };
 let umpans = [];
@@ -24,13 +24,13 @@ function startPowerUpSpawner() {
       { type: "widerNet", color: "cyan" },
     ];
     if (powerUps.length > 0) {
-      const delay = 5000 + Math.random() * 10000; 
+      const delay = 5000 + Math.random() * 10000;
       setTimeout(spawnOne, delay);
       return;
     }
 
     const chosen = types[Math.floor(Math.random() * types.length)];
-    const lifeSeconds = 5 + Math.floor(Math.random() * 11); 
+    const lifeSeconds = 5 + Math.floor(Math.random() * 11);
     const p = {
       x: 20 + Math.random() * (cnv.width - 40),
       y: 20 + Math.random() * (cnv.height - 40),
@@ -101,16 +101,16 @@ function main() {
 
   setupEventListeners();
 
-  ctx.clearRect(0, 0, cnv.width, cnv.height); 
-  imageData = ctx.getImageData(0, 0, cnv.width, cnv.height); 
+  ctx.clearRect(0, 0, cnv.width, cnv.height);
+  imageData = ctx.getImageData(0, 0, cnv.width, cnv.height);
 
   const fishAndTrashes = henryFunctions.generateFishAndTrash(
     imageData,
     cnv,
-    20, 
-    10, 
-    { r: 0, g: 0, b: 255 }, 
-    { r: 255, g: 0, b: 0 } 
+    20,
+    10,
+    { r: 0, g: 0, b: 255 },
+    { r: 255, g: 0, b: 0 }
   );
 
   ctx.putImageData(imageData, 0, 0);

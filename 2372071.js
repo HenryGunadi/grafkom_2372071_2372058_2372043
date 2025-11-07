@@ -67,39 +67,23 @@ export function drawPentagon(imageData, cx, cy, radius, r, g, b, cnv) {
     common.dda_line(imageData, start.x, start.y, end.x, end.y, r, g, b, cnv);
   }
 
-  const ys = points.map((p) => p.y);
-  const minY = Math.max(0, Math.ceil(Math.min(...ys)));
-  const maxY = Math.min(cnv.height - 1, Math.floor(Math.max(...ys)));
+  const sx = Math.max(0, Math.min(Math.round(cx), cnv.width - 1));
+  const sy = Math.max(0, Math.min(Math.round(cy), cnv.height - 1));
+  const idxCenter = 4 * (sx + sy * cnv.width);
+  const toFloodColor = {
+    r: imageData.data[idxCenter] || 0,
+    g: imageData.data[idxCenter + 1] || 0,
+    b: imageData.data[idxCenter + 2] || 0,
+  };
 
-  for (let y = minY; y <= maxY; y++) {
-    const intersects = [];
-
-    for (let i = 0; i < points.length; i++) {
-      const a = points[i];
-      const b = points[(i + 1) % points.length];
-
-      if (a.y === b.y) continue;
-
-      const ymin = Math.min(a.y, b.y);
-      const ymax = Math.max(a.y, b.y);
-
-      if (y < ymin || y >= ymax) continue;
-
-      const x = a.x + ((y - a.y) * (b.x - a.x)) / (b.y - a.y);
-      intersects.push(x);
-    }
-
-    if (intersects.length < 2) continue;
-    intersects.sort((a, b) => a - b);
-
-    for (let k = 0; k + 1 < intersects.length; k += 2) {
-      const xStart = Math.max(0, Math.ceil(intersects[k]));
-      const xEnd = Math.min(cnv.width - 1, Math.floor(intersects[k + 1]));
-      for (let x = xStart; x <= xEnd; x++) {
-        common.gambar_titik(imageData, x, y, r, g, b, cnv);
-      }
-    }
-  }
+  common.FloodFillStack(
+    imageData,
+    cnv,
+    sx,
+    sy,
+    toFloodColor,
+    { r: r, g: g, b: b }
+  );
 }
 
 export function generateFishAndTrash(
@@ -236,32 +220,6 @@ export function animate(
         common.gambar_titik(imageData, x, y, 255, 165, 0, cnv);
       }
     });
-  }
-
-  function drawPausedText() {
-    const text = "PAUSED";
-    const x = cnv.width / 2 - 100;
-    const y = cnv.height / 2;
-
-    for (let i = 0; i < text.length; i++) {
-      const charX = x + i * 30;
-      if (
-        text[i] === "P" ||
-        text[i] === "A" ||
-        text[i] === "U" ||
-        text[i] === "S" ||
-        text[i] === "E" ||
-        text[i] === "D"
-      ) {
-        for (let py = y - 20; py <= y + 20; py++) {
-          for (let px = charX - 10; px <= charX + 10; px++) {
-            if (px >= 0 && px < cnv.width && py >= 0 && py < cnv.height) {
-              common.gambar_titik(imageData, px, py, 255, 255, 255, cnv);
-            }
-          }
-        }
-      }
-    }
   }
 
   function draw() {
@@ -444,25 +402,6 @@ export function animate(
 
         timer = 0;
       }
-    }
-
-    if (controls.paused) {
-      try {
-        if (controls._snapshot) {
-          ctx.putImageData(controls._snapshot, 0, 0);
-        } else {
-          const overlay = ctx.createImageData(cnv.width, cnv.height);
-          for (let i = 0; i < overlay.data.length; i += 4) {
-            overlay.data[i] = 0; // R
-            overlay.data[i + 1] = 0; // G
-            overlay.data[i + 2] = 0; // B
-            overlay.data[i + 3] = 115; // 45% opacity
-          }
-          ctx.putImageData(overlay, 0, 0);
-
-          drawPausedText();
-        }
-      } catch (e) { }
     }
 
     for (let i = powerUps.length - 1; i >= 0; i--) {

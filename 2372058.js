@@ -1,4 +1,3 @@
-// 2372058.js
 import * as common from "./common.js";
 
 export function gambar_titik(imageData, x, y, r, g, b, cnv) {
@@ -60,7 +59,7 @@ export function umpan(cnv, umpans) {
       umpans.push({
         x: baseX + setX,
         y: baseY + setY,
-        r: 10, 
+        r: 10,
       });
     }
     console.log(
