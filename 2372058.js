@@ -59,7 +59,7 @@ export function umpan(cnv, umpans) {
       umpans.push({
         x: baseX + setX,
         y: baseY + setY,
-        r: 10, // Increased size for better visibility
+        r: 10,
       });
     }
     console.log(
