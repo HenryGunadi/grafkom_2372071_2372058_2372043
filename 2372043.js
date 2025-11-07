@@ -6,26 +6,26 @@
 import * as common from "./common.js";
 
 let score = 0;
-let gameTime = 60; 
+let gameTime = 60;
 let isGameActive = false;
 let gameTimer = null;
 
 let powerUpsConfig = {
   speedBoost: {
     active: false,
-    duration: 5000, 
+    duration: 5000,
     timer: null,
-    multiplier: 2 
+    multiplier: 2
   },
   doublePoints: {
     active: false,
-    duration: 7000, 
+    duration: 7000,
     timer: null,
     multiplier: 2
   },
   widerNet: {
     active: false,
-    duration: 6000, 
+    duration: 6000,
     timer: null,
     sizeIncrease: 50
   }
@@ -141,7 +141,7 @@ export function addScore(points) {
   if (el) el.textContent = `Score: ${score}`;
 }
 
-export function activatePowerUp(type) {
+export function activatePowerUp(type, net = undefined) {
   if (!powerUpsConfig[type]) return;
 
   powerUpsConfig[type].active = true;

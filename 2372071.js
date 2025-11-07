@@ -1,6 +1,6 @@
 // 2372071.js
 import * as common from "./common.js";
-import * as game from "./2372043.js";
+import * as rafaelFunctions from "./2372043.js"; 
 
 export function square(imageData, xc, yc, length, r, g, b, cnv) {
   const x1 = Math.floor(xc - length / 2);
@@ -53,7 +53,6 @@ export function lingkaran(
 
 export function drawPentagon(imageData, cx, cy, radius, r, g, b, cnv) {
   const points = [];
-
   for (let i = 0; i < 5; i++) {
     const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2;
     const px = cx + Math.cos(angle) * radius;
@@ -62,28 +61,39 @@ export function drawPentagon(imageData, cx, cy, radius, r, g, b, cnv) {
   }
 
   for (let i = 0; i < 5; i++) {
-    const start = points[i];
-    const end = points[(i + 1) % 5];
-    common.dda_line(imageData, start.x, start.y, end.x, end.y, r, g, b, cnv);
+    const a = points[i];
+    const bP = points[(i + 1) % 5];
+    common.dda_line(imageData, a.x, a.y, bP.x, bP.y, r, g, b, cnv);
   }
 
-  const sx = Math.max(0, Math.min(Math.round(cx), cnv.width - 1));
-  const sy = Math.max(0, Math.min(Math.round(cy), cnv.height - 1));
-  const idxCenter = 4 * (sx + sy * cnv.width);
-  const toFloodColor = {
-    r: imageData.data[idxCenter] || 0,
-    g: imageData.data[idxCenter + 1] || 0,
-    b: imageData.data[idxCenter + 2] || 0,
-  };
+  const ys = points.map((p) => p.y);
+  const minY = Math.max(0, Math.ceil(Math.min(...ys)));
+  const maxY = Math.min(cnv.height - 1, Math.floor(Math.max(...ys)));
 
-  common.FloodFillStack(
-    imageData,
-    cnv,
-    sx,
-    sy,
-    toFloodColor,
-    { r: r, g: g, b: b }
-  );
+  for (let y = minY; y <= maxY; y++) {
+    const intersects = [];
+    for (let i = 0; i < points.length; i++) {
+      const p1 = points[i];
+      const p2 = points[(i + 1) % points.length];
+      if (p1.y === p2.y) continue;
+      const ymin = Math.min(p1.y, p2.y);
+      const ymax = Math.max(p1.y, p2.y);
+      if (y < ymin || y >= ymax) continue;
+      const x = p1.x + ((y - p1.y) * (p2.x - p1.x)) / (p2.y - p1.y);
+      intersects.push(x);
+    }
+
+    if (intersects.length < 2) continue;
+    intersects.sort((a, b) => a - b);
+
+    for (let k = 0; k + 1 < intersects.length; k += 2) {
+      const xStart = Math.max(0, Math.ceil(intersects[k]));
+      const xEnd = Math.min(cnv.width - 1, Math.floor(intersects[k + 1]));
+      for (let x = xStart; x <= xEnd; x++) {
+        common.gambar_titik(imageData, x, y, r, g, b, cnv);
+      }
+    }
+  }
 }
 
 export function generateFishAndTrash(
@@ -182,31 +192,30 @@ export function animate(
   function drawPowerUps() {
     powerUps.forEach((p) => {
       if (p.collected || p.life <= 0) return;
-
-      let r, g, b;
+      let rr, gg, bb;
       switch (p.color) {
         case "orange":
-          r = 255;
-          g = 165;
-          b = 0;
+          rr = 230;
+          gg = 126;
+          bb = 34;
           break;
         case "purple":
-          r = 128;
-          g = 0;
-          b = 128;
+          rr = 155;
+          gg = 89;
+          bb = 182;
           break;
         case "cyan":
-          r = 0;
-          g = 255;
-          b = 255;
+          rr = 26;
+          gg = 188;
+          bb = 156;
           break;
         default:
-          r = 255;
-          g = 255;
-          b = 255;
+          rr = 255;
+          gg = 255;
+          bb = 255;
       }
 
-      drawPentagon(imageData, p.x, p.y, p.size || 12, r, g, b, cnv);
+      drawPentagon(imageData, p.x, p.y, p.size || 12, rr, gg, bb, cnv);
     });
   }
 
@@ -303,6 +312,11 @@ export function animate(
         });
 
         activeJaringAnimations.forEach((net) => {
+          const extraRadius = rafaelFunctions.isPowerUpActive("widerNet")
+            ? rafaelFunctions._getPowerUpsConfig().widerNet.sizeIncrease
+            : 0;
+          const effectiveMaxR = net.maxR + extraRadius;
+
           if (!net.done) {
             common.lingkaran_polar(
               imageData,
@@ -314,9 +328,17 @@ export function animate(
               0,
               cnv
             );
-            net.r += net.speed;
+
+            const baseSpeed = net.baseSpeed || net.speed;
+            net.baseSpeed = baseSpeed;
+            const speedMultiplier = rafaelFunctions.isPowerUpActive("speedBoost")
+              ? rafaelFunctions._getPowerUpsConfig().speedBoost.multiplier
+              : 1;
+            const effectiveSpeed = net.speed > 0 ? baseSpeed * speedMultiplier : net.speed;
+            net.r += effectiveSpeed;
+
             if (
-              (net.speed > 0 && net.r >= net.maxR) ||
+              (net.speed > 0 && net.r >= effectiveMaxR) ||
               (net.speed < 0 && net.r <= net.maxR)
             ) {
               net.done = true;
@@ -327,7 +349,7 @@ export function animate(
               imageData,
               net.x,
               net.y,
-              net.maxR,
+              effectiveMaxR,
               255,
               0,
               0,
@@ -342,9 +364,9 @@ export function animate(
               const f = fishes[i];
               const dx = f.x - net.x;
               const dy = f.y - net.y;
-              if (dx * dx + dy * dy <= net.maxR * net.maxR) {
+              if (dx * dx + dy * dy <= effectiveMaxR * effectiveMaxR) {
                 fishCaughtIndices.push(i);
-                game.addScore(10);
+                rafaelFunctions.addScore(10);
               }
             }
             fishCaughtIndices.forEach((idx) => fishes.splice(idx, 1));
@@ -354,9 +376,9 @@ export function animate(
               const t = trashes[i];
               const dx = t.x - net.x;
               const dy = t.y - net.y;
-              if (dx * dx + dy * dy <= net.maxR * net.maxR) {
+              if (dx * dx + dy * dy <= effectiveMaxR * effectiveMaxR) {
                 trashCaughtIndices.push(i);
-                game.addScore(-5);
+                rafaelFunctions.addScore(-5);
               }
             }
             trashCaughtIndices.forEach((idx) => trashes.splice(idx, 1));
@@ -366,7 +388,7 @@ export function animate(
               const u = umpans[i];
               const dx = u.x - net.x;
               const dy = u.y - net.y;
-              if (dx * dx + dy * dy <= net.maxR * net.maxR) {
+              if (dx * dx + dy * dy <= effectiveMaxR * effectiveMaxR) {
                 umpanCaughtIndices.push(i);
               }
             }
@@ -376,9 +398,9 @@ export function animate(
               if (p.collected || p.life <= 0) return;
               const dx = p.x - net.x;
               const dy = p.y - net.y;
-              if (dx * dx + dy * dy <= net.maxR * net.maxR) {
+              if (dx * dx + dy * dy <= effectiveMaxR * effectiveMaxR) {
                 p.collected = true;
-                game.activatePowerUp(p.type);
+                rafaelFunctions.activatePowerUp(p.type);
               }
             });
 
@@ -411,7 +433,7 @@ export function animate(
       }
     }
 
-    if (game.isGameRunning()) {
+    if (rafaelFunctions.isGameRunning()) {
       requestAnimationFrame(draw);
     }
   }

@@ -181,9 +181,9 @@ function updateGameStats() {
 
   if (scoreElement) scoreElement.textContent = rafaelFunctions.getScore() || 0;
   if (timeElement)
-    timeElement.textContent = `${rafaelFunctions.getTimeRemaining() || 60}s`;
+     timeElement.textContent = `${rafaelFunctions.getTimeRemaining() || 60}s`;
   if (fishElement)
-    fishElement.textContent = rafaelFunctions.getFishCaught() || 0;
+     fishElement.textContent = rafaelFunctions.getFishCaught() || 0;
   if (baitElement) baitElement.textContent = umpans.length;
 }
 
