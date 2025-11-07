@@ -1,6 +1,6 @@
 // 2372071.js
 import * as common from "./common.js";
-import * as rafaelFunctions from "./2372043.js"; 
+import * as rafaelFunctions from "./2372043.js";
 
 export function square(imageData, xc, yc, length, r, g, b, cnv) {
   const x1 = Math.floor(xc - length / 2);
@@ -359,7 +359,7 @@ export function animate(
           }
 
           if (net.done && !net.counted) {
-            let fishCaughtIndices = [];
+            const fishCaughtIndices = [];
             for (let i = fishes.length - 1; i >= 0; i--) {
               const f = fishes[i];
               const dx = f.x - net.x;
@@ -371,7 +371,7 @@ export function animate(
             }
             fishCaughtIndices.forEach((idx) => fishes.splice(idx, 1));
 
-            let trashCaughtIndices = [];
+            const trashCaughtIndices = [];
             for (let i = trashes.length - 1; i >= 0; i--) {
               const t = trashes[i];
               const dx = t.x - net.x;
@@ -394,15 +394,15 @@ export function animate(
             }
             umpanCaughtIndices.forEach((idx) => umpans.splice(idx, 1));
 
-            powerUps.forEach((p) => {
-              if (p.collected || p.life <= 0) return;
+            for (const p of powerUps) {
               const dx = p.x - net.x;
               const dy = p.y - net.y;
+              if (p.collected || p.life <= 0) continue;
               if (dx * dx + dy * dy <= effectiveMaxR * effectiveMaxR) {
                 p.collected = true;
                 rafaelFunctions.activatePowerUp(p.type);
               }
-            });
+            }
 
             net.counted = true;
           }
